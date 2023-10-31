@@ -8,12 +8,22 @@ generator client {
 }
 
 model User {
-  createdAt DateTime @default(now())
+  createdAt DateTime   @default(now())
+  customers Customer[]
   firstName String?
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   lastName  String?
   password  String
   roles     Json
+  updatedAt DateTime   @updatedAt
+  username  String     @unique
+}
+
+model Customer {
+  address   String?
+  createdAt DateTime @default(now())
+  id        String   @id @default(cuid())
   updatedAt DateTime @updatedAt
-  username  String   @unique
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
 }
