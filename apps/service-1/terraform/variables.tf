@@ -1,0 +1,1 @@
+apps/service-1/terraform/variables.tf
