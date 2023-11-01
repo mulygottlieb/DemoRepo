@@ -10,7 +10,7 @@ https://docs.amplication.com/how-to/custom-code
 ------------------------------------------------------------------------------
   */
 import * as graphql from "@nestjs/graphql";
-import * as apollo from "apollo-server-express";
+import { GraphQLError } from "graphql";
 import { isRecordNotFoundError } from "../../prisma.util";
 import { MetaQueryPayload } from "../../util/MetaQueryPayload";
 import * as nestAccessControl from "nest-access-control";
@@ -26,6 +26,8 @@ import { UserCountArgs } from "./UserCountArgs";
 import { UserFindManyArgs } from "./UserFindManyArgs";
 import { UserFindUniqueArgs } from "./UserFindUniqueArgs";
 import { User } from "./User";
+import { CustomerFindManyArgs } from "../../customer/base/CustomerFindManyArgs";
+import { Customer } from "../../customer/base/Customer";
 import { UserService } from "../user.service";
 @common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => User)
@@ -105,7 +107,7 @@ export class UserResolverBase {
       });
     } catch (error) {
       if (isRecordNotFoundError(error)) {
-        throw new apollo.ApolloError(
+        throw new GraphQLError(
           `No resource was found for ${JSON.stringify(args.where)}`
         );
       }
@@ -124,11 +126,31 @@ export class UserResolverBase {
       return await this.service.delete(args);
     } catch (error) {
       if (isRecordNotFoundError(error)) {
-        throw new apollo.ApolloError(
+        throw new GraphQLError(
           `No resource was found for ${JSON.stringify(args.where)}`
         );
       }
       throw error;
     }
+  }
+
+  @common.UseInterceptors(AclFilterResponseInterceptor)
+  @graphql.ResolveField(() => [Customer], { name: "customers" })
+  @nestAccessControl.UseRoles({
+    resource: "Customer",
+    action: "read",
+    possession: "any",
+  })
+  async resolveFieldCustomers(
+    @graphql.Parent() parent: User,
+    @graphql.Args() args: CustomerFindManyArgs
+  ): Promise<Customer[]> {
+    const results = await this.service.findCustomers(parent.id, args);
+
+    if (!results) {
+      return [];
+    }
+
+    return results;
   }
 }

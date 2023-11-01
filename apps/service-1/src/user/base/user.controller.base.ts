@@ -27,6 +27,9 @@ import { UserWhereUniqueInput } from "./UserWhereUniqueInput";
 import { UserFindManyArgs } from "./UserFindManyArgs";
 import { UserUpdateInput } from "./UserUpdateInput";
 import { User } from "./User";
+import { CustomerFindManyArgs } from "../../customer/base/CustomerFindManyArgs";
+import { Customer } from "../../customer/base/Customer";
+import { CustomerWhereUniqueInput } from "../../customer/base/CustomerWhereUniqueInput";
 
 @swagger.ApiBearerAuth()
 @common.UseGuards(defaultAuthGuard.DefaultAuthGuard, nestAccessControl.ACGuard)
@@ -199,5 +202,107 @@ export class UserControllerBase {
       }
       throw error;
     }
+  }
+
+  @common.UseInterceptors(AclFilterResponseInterceptor)
+  @common.Get("/:id/customers")
+  @ApiNestedQuery(CustomerFindManyArgs)
+  @nestAccessControl.UseRoles({
+    resource: "Customer",
+    action: "read",
+    possession: "any",
+  })
+  async findManyCustomers(
+    @common.Req() request: Request,
+    @common.Param() params: UserWhereUniqueInput
+  ): Promise<Customer[]> {
+    const query = plainToClass(CustomerFindManyArgs, request.query);
+    const results = await this.service.findCustomers(params.id, {
+      ...query,
+      select: {
+        address: true,
+        createdAt: true,
+        id: true,
+        updatedAt: true,
+
+        user: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+    if (results === null) {
+      throw new errors.NotFoundException(
+        `No resource was found for ${JSON.stringify(params)}`
+      );
+    }
+    return results;
+  }
+
+  @common.Post("/:id/customers")
+  @nestAccessControl.UseRoles({
+    resource: "User",
+    action: "update",
+    possession: "any",
+  })
+  async connectCustomers(
+    @common.Param() params: UserWhereUniqueInput,
+    @common.Body() body: CustomerWhereUniqueInput[]
+  ): Promise<void> {
+    const data = {
+      customers: {
+        connect: body,
+      },
+    };
+    await this.service.update({
+      where: params,
+      data,
+      select: { id: true },
+    });
+  }
+
+  @common.Patch("/:id/customers")
+  @nestAccessControl.UseRoles({
+    resource: "User",
+    action: "update",
+    possession: "any",
+  })
+  async updateCustomers(
+    @common.Param() params: UserWhereUniqueInput,
+    @common.Body() body: CustomerWhereUniqueInput[]
+  ): Promise<void> {
+    const data = {
+      customers: {
+        set: body,
+      },
+    };
+    await this.service.update({
+      where: params,
+      data,
+      select: { id: true },
+    });
+  }
+
+  @common.Delete("/:id/customers")
+  @nestAccessControl.UseRoles({
+    resource: "User",
+    action: "update",
+    possession: "any",
+  })
+  async disconnectCustomers(
+    @common.Param() params: UserWhereUniqueInput,
+    @common.Body() body: CustomerWhereUniqueInput[]
+  ): Promise<void> {
+    const data = {
+      customers: {
+        disconnect: body,
+      },
+    };
+    await this.service.update({
+      where: params,
+      data,
+      select: { id: true },
+    });
   }
 }
