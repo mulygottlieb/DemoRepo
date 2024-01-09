@@ -9,6 +9,14 @@ import { UserList } from "./user/UserList";
 import { UserCreate } from "./user/UserCreate";
 import { UserEdit } from "./user/UserEdit";
 import { UserShow } from "./user/UserShow";
+import { MorList } from "./mor/MorList";
+import { MorCreate } from "./mor/MorCreate";
+import { MorEdit } from "./mor/MorEdit";
+import { MorShow } from "./mor/MorShow";
+import { PazList } from "./paz/PazList";
+import { PazCreate } from "./paz/PazCreate";
+import { PazEdit } from "./paz/PazEdit";
+import { PazShow } from "./paz/PazShow";
 import { jwtAuthProvider } from "./auth-provider/ra-auth-jwt";
 
 const App = (): React.ReactElement => {
@@ -41,6 +49,20 @@ const App = (): React.ReactElement => {
           edit={UserEdit}
           create={UserCreate}
           show={UserShow}
+        />
+        <Resource
+          name="Mor"
+          list={MorList}
+          edit={MorEdit}
+          create={MorCreate}
+          show={MorShow}
+        />
+        <Resource
+          name="Paz"
+          list={PazList}
+          edit={PazEdit}
+          create={PazCreate}
+          show={PazShow}
         />
       </Admin>
     </div>
